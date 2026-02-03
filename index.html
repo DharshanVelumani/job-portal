@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Job Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #2563eb;
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Main Container -->
+    <div id="app" class="container mx-auto p-4 md:p-8">
+
+        <!-- Header -->
+        <header class="bg-white rounded-xl shadow-lg p-6 mb-6 flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800">Job Portal</h1>
+            <div id="auth-controls" class="mt-4 md:mt-0 flex items-center space-x-4">
+                <button id="logout-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-red-600 transition duration-300 hidden">
+                    Logout
+                </button>
+                <div id="user-info" class="font-medium text-gray-700 hidden"></div>
+                <button id="login-signup-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-blue-600 transition duration-300">
+                    Login / Sign Up
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area - Job Seeker View -->
+        <div id="job-seeker-dashboard" class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Job Listings</h2>
+            
+            <!-- Job Seeker Analytics Dashboard -->
+            <div id="job-seeker-analytics" class="mb-6 bg-gray-50 p-6 rounded-lg shadow-inner flex flex-wrap items-center justify-around space-y-4 md:space-y-0 md:space-x-4">
+                <div class="text-center w-full md:w-auto">
+                    <p class="text-4xl font-bold text-blue-600" id="applied-jobs-count">0</p>
+                    <p class="text-gray-600">Jobs Applied</p>
+                </div>
+            </div>
+
+            <!-- My Profile & Resume Section -->
+            <div id="job-seeker-profile" class="mb-6 bg-gray-50 p-6 rounded-lg shadow-inner border-b-2 border-gray-200">
+                <!-- Profile and resume content will be injected here -->
+            </div>
+
+            <!-- My Applied Jobs Section -->
+            <div id="applied-jobs-section" class="mb-6 bg-gray-50 p-6 rounded-lg shadow-inner border-b-2 border-gray-200 hidden">
+                <h3 class="text-xl font-medium text-gray-600 mb-4">My Applied Jobs</h3>
+                <div id="applied-jobs-list" class="space-y-4">
+                    <!-- Applied job cards will be injected here -->
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg shadow-inner">
+                <h3 class="text-xl font-medium text-gray-600 mb-3">Filters</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="text" id="search-keyword" placeholder="Search by keyword..." class="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="filter-location" class="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Locations</option>
+                        <option value="Coimbatore">Coimbatore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="New York">New York</option>
+                        <option value="Tokyo">Tokyo</option>
+                        <option value="London">London</option>
+                        <option value="Sydney">Sydney</option>
+                    </select>
+                    <select id="filter-experience" class="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Experience Levels</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Entry-Level">Entry-Level</option>
+                        <option value="Mid-Level">Mid-Level</option>
+                        <option value="Senior-Level">Senior-Level</option>
+                    </select>
+                     <select id="filter-shift" class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Shifts</option>
+                        <option value="Day">Day Shift</option>
+                        <option value="Night">Night Shift</option>
+                        <option value="Both">Both Shifts</option>
+                    </select>
+                    <select id="filter-domain" class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Domains</option>
+                        <option value="IT">IT</option>
+                        <option value="Design">Design</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Food & Beverage">Food & Beverage</option>
+                        <option value="Consulting">Consulting</option>
+                        <option value="Construction">Construction</option>
+                        <option value="AI">AI</option>
+                    </select>
+                    <button id="apply-filters-btn" class="bg-green-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-green-600 transition duration-300">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Job Listings -->
+            <div id="job-listings" class="space-y-4">
+                <!-- Job cards will be injected here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Main Content Area - Recruiter View -->
+        <div id="recruiter-dashboard" class="bg-white rounded-xl shadow-lg p-6 hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Recruiter Dashboard</h2>
+
+            <!-- Recruiter Analytics Dashboard -->
+            <div id="recruiter-analytics" class="mb-6 bg-gray-50 p-6 rounded-lg shadow-inner flex flex-wrap items-center justify-around space-y-4 md:space-y-0 md:space-x-4">
+                <div class="text-center w-full md:w-auto">
+                    <p class="text-4xl font-bold text-blue-600" id="posted-jobs-count">0</p>
+                    <p class="text-gray-600">Total Jobs Posted</p>
+                </div>
+                <div class="text-center w-full md:w-auto">
+                    <p class="text-4xl font-bold text-green-600" id="total-applicants-count">0</p>
+                    <p class="text-gray-600">Total Applications</p>
+                </div>
+            </div>
+            
+            <!-- Post New Job Section -->
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <h3 class="text-xl font-medium text-gray-600 mb-3">Post a New Job</h3>
+                <form id="post-job-form" class="space-y-4">
+                    <input type="text" id="job-title-input" placeholder="Job Title" required class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="job-location-input" placeholder="Location" required class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="job-shift-input" class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Day">Day Shift</option>
+                        <option value="Night">Night Shift</option>
+                        <option value="Both">Both Shifts</option>
+                    </select>
+                    <select id="job-domain-input" class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Domain</option>
+                        <option value="IT">IT</option>
+                        <option value="Design">Design</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Food & Beverage">Food & Beverage</option>
+                        <option value="Consulting">Consulting</option>
+                        <option value="Construction">Construction</option>
+                        <option value="AI">AI</option>
+                    </select>
+                    <div class="flex items-center space-x-2">
+                        <textarea id="job-description-input" placeholder="Job Description" rows="4" required class="p-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        <button id="generate-jd-btn" type="button" class="bg-blue-500 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 whitespace-nowrap">
+                            ✨ Generate JD
+                        </button>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">Post Job</button>
+                </form>
+            </div>
+            
+            <!-- My Postings Section -->
+            <div>
+                <h3 class="text-xl font-medium text-gray-600 mb-3">My Job Postings</h3>
+                <div id="recruiter-jobs-list" class="space-y-4">
+                    <!-- Recruiter's jobs will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area - Admin View -->
+        <div id="admin-dashboard" class="bg-white rounded-xl shadow-lg p-6 hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Admin Dashboard</h2>
+
+            <!-- Analytics Section -->
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner flex items-center justify-around space-x-4">
+                <div class="text-center">
+                    <p class="text-4xl font-bold text-blue-600" id="total-users-count">0</p>
+                    <p class="text-gray-600">Total Users</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-4xl font-bold text-green-600" id="total-jobs-count">0</p>
+                    <p class="text-gray-600">Total Job Postings</p>
+                </div>
+            </div>
+
+            <!-- Manage Job Postings Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-medium text-gray-600 mb-3">Manage Job Postings</h3>
+                <div id="manage-jobs-list" class="space-y-4">
+                    <!-- Jobs to be managed will be injected here -->
+                </div>
+            </div>
+
+            <!-- Manage Users Section -->
+            <div>
+                <h3 class="text-xl font-medium text-gray-600 mb-3">Manage Users</h3>
+                <div id="manage-users-list" class="space-y-4">
+                    <!-- Users will be injected here -->
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <button id="clear-applications-btn" class="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300">
+                    Clear All Applications
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Login/Sign Up Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-center">Login / Sign Up</h3>
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" required class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" required class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="role-select" class="block text-sm font-medium text-gray-700">Role</label>
+                    <select id="role-select" class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="job_seeker">Job Seeker</option>
+                        <option value="recruiter">Recruiter</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="gender-select" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender-select" class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Not specified">Not specified</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <p id="auth-message" class="text-sm text-red-500 text-center"></p>
+                <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">
+                    Login / Sign Up
+                </button>
+            </form>
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-800" onclick="document.getElementById('login-modal').style.display='none'">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Job Application Modal -->
+    <div id="apply-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-center">Apply for Job</h3>
+            <p id="job-title-apply" class="text-lg text-gray-700 mb-4"></p>
+            <form id="apply-form" class="space-y-4">
+                <div>
+                    <label for="photo-upload" class="block text-sm font-medium text-gray-700">Upload Photo (JPG/PNG)</label>
+                    <input type="file" id="photo-upload" accept=".jpg, .jpeg, .png" class="mt-1 w-full text-sm text-gray-500">
+                </div>
+                <div>
+                    <label for="resume-upload" class="block text-sm font-medium text-gray-700">Upload Resume (PDF/DOCX)</label>
+                    <input type="file" id="resume-upload" accept=".pdf, .docx" required class="mt-1 w-full text-sm text-gray-500">
+                </div>
+                <p id="apply-message" class="text-sm text-red-500 text-center"></p>
+                <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 transition duration-300">
+                    Submit Application
+                </button>
+            </form>
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-800" onclick="document.getElementById('apply-modal').style.display='none'">&times;</button>
+        </div>
+    </div>
+    
+    <!-- View Applicants Modal -->
+    <div id="applicants-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="applicants-title" class="text-2xl font-bold mb-4 text-center"></h3>
+            <div id="applicants-list" class="space-y-4 max-h-96 overflow-y-auto">
+                <!-- Applicants will be injected here -->
+            </div>
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-800" onclick="document.getElementById('applicants-modal').style.display='none'">&times;</button>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content text-center">
+            <h3 id="message-title" class="text-xl font-bold mb-4"></h3>
+            <p id="message-text" class="text-gray-700 mb-6"></p>
+            <button onclick="document.getElementById('message-modal').style.display='none'" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            let currentUser = null;
+
+            // Simple "database" for jobs and users
+            const jobs = [
+                { id: 2, title: 'UX/UI Designer', company: 'Creative Minds', location: 'Bangalore', salary: '₹6 - 10 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'Design', status: 'Approved', description: 'Design user-friendly interfaces for our mobile and web applications.', recruiterId: 'recruiter2' },
+                { id: 3, title: 'Data Scientist', company: 'Data Analytics Hub', location: 'Chennai', salary: '₹10 - 18 LPA', experience: 'Senior-Level', shift: 'Both', domain: 'Data Science', status: 'Approved', description: 'Analyze large datasets and build predictive models.', recruiterId: 'recruiter1' },
+                { id: 4, title: 'Internship - Web Dev', company: 'Future Coders', location: 'Mumbai', salary: '₹15,000 / month', experience: 'Internship', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Hands-on experience with modern web development frameworks.', recruiterId: 'recruiter2' },
+                { id: 5, title: 'Network Administrator', company: 'SecureNet', location: 'Coimbatore', salary: '₹5 - 8 LPA', experience: 'Entry-Level', shift: 'Night', domain: 'IT', status: 'Approved', description: 'Manage and maintain the company network infrastructure.', recruiterId: 'recruiter1' },
+                { id: 6, title: 'Full Stack Developer', company: 'Innovate Solutions', location: 'Pune', salary: '₹10 - 15 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Approved', description: 'Develop and maintain web applications using the MERN stack.', recruiterId: 'recruiter3' },
+                { id: 7, title: 'Registered Nurse', company: 'City Hospital', location: 'Hyderabad', salary: '₹6 - 9 LPA', experience: 'Mid-Level', shift: 'Night', domain: 'Healthcare', status: 'Approved', description: 'Provide patient care and support medical staff in a fast-paced hospital environment.', recruiterId: 'recruiter4' },
+                { id: 8, title: 'Cloud Engineer', company: 'CloudWorks', location: 'Delhi', salary: '₹12 - 20 LPA', experience: 'Senior-Level', shift: 'Night', domain: 'IT', status: 'Approved', description: 'Manage and optimize cloud infrastructure on AWS/Azure.', recruiterId: 'recruiter3' },
+                { id: 9, title: 'Financial Analyst', company: 'Global Finance Corp.', location: 'New York', salary: '$70k - 90k', experience: 'Mid-Level', shift: 'Day', domain: 'Finance', status: 'Approved', description: 'Analyze financial data and provide strategic business recommendations.', recruiterId: 'recruiter5' },
+                { id: 10, title: 'High School Teacher', company: 'Bright Horizons School', location: 'Bangalore', salary: '₹5 - 8 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'Education', status: 'Approved', description: 'Educate students and develop engaging lesson plans for high school curriculum.', recruiterId: 'recruiter6' },
+                { id: 11, title: 'Automotive Engineer', company: 'NextGen Motors', location: 'Mumbai', salary: '₹10 - 15 LPA', experience: 'Senior-Level', shift: 'Day', domain: 'Automotive', status: 'Approved', description: 'Design and develop innovative automotive systems and components.', recruiterId: 'recruiter7' },
+                { id: 12, title: 'DevOps Engineer', company: 'CodeDeploy', location: 'Pune', salary: '₹15 - 25 LPA', experience: 'Mid-Level', shift: 'Both', domain: 'IT', status: 'Approved', description: 'Automate software delivery and manage cloud infrastructure.', recruiterId: 'recruiter8' },
+                { id: 13, title: 'Human Resources Specialist', company: 'TalentLink', location: 'Chennai', salary: '₹5 - 9 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'Human Resources', status: 'Approved', description: 'Support employee relations and manage the recruitment process.', recruiterId: 'recruiter9' },
+                { id: 14, title: 'Manufacturing Supervisor', company: 'Industrial Solutions', location: 'Coimbatore', salary: '₹6 - 10 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'Manufacturing', status: 'Approved', description: 'Oversee manufacturing processes and ensure quality control.', recruiterId: 'recruiter10' },
+                { id: 15, title: 'Retail Store Manager', company: 'Style Inc.', location: 'Mumbai', salary: '₹8 - 12 LPA', experience: 'Mid-Level', shift: 'Both', domain: 'Retail', status: 'Approved', description: 'Manage daily store operations and lead a team of sales associates.', recruiterId: 'recruiter1' },
+                { id: 16, title: 'Logistics Coordinator', company: 'QuickShip Logistics', location: 'Delhi', salary: '₹4 - 7 LPA', experience: 'Entry-Level', shift: 'Night', domain: 'Logistics', status: 'Approved', description: 'Coordinate transportation and warehouse activities for efficient delivery.', recruiterId: 'recruiter2' },
+                { id: 17, title: 'Restaurant Manager', company: 'Gourmet Bites', location: 'New York', salary: '$60k - 80k', experience: 'Mid-Level', shift: 'Both', domain: 'Food & Beverage', status: 'Pending', description: 'Manage all restaurant operations and ensure customer satisfaction.', recruiterId: 'recruiter3' },
+                { id: 18, title: 'Frontend Developer', company: 'Global Tech Solutions', location: 'London', salary: '£40k - 55k', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Approved', description: 'Build responsive and user-friendly web applications.', recruiterId: 'recruiter4' },
+                { id: 19, title: 'Civil Engineer', company: 'Urban Planners', location: 'Sydney', salary: 'A$80k - 100k', experience: 'Senior-Level', shift: 'Day', domain: 'Construction', status: 'Approved', description: 'Design and oversee infrastructure projects like bridges and roads.', recruiterId: 'recruiter5' },
+                { id: 20, title: 'AI/ML Engineer', company: 'Innovative Designs Ltd', location: 'Tokyo', salary: '¥8M - 12M', experience: 'Senior-Level', shift: 'Both', domain: 'IT', status: 'Approved', description: 'Develop and deploy machine learning models for intelligent systems.', recruiterId: 'recruiter6' },
+                { id: 21, title: 'Marketing Manager', company: 'Growth Strategies Co.', location: 'London', salary: '£35k - 50k', experience: 'Mid-Level', shift: 'Day', domain: 'Marketing', status: 'Approved', description: 'Develop and execute marketing campaigns to drive brand growth.', recruiterId: 'recruiter7' },
+                { id: 22, title: 'Graphic Designer', company: 'Visual Arts Studio', location: 'Sydney', salary: 'A$60k - 80k', experience: 'Entry-Level', shift: 'Day', domain: 'Design', status: 'Approved', description: 'Create stunning visual content for digital and print media.', recruiterId: 'recruiter8' },
+                { id: 23, title: 'Business Analyst', company: 'Deloitte', location: 'Coimbatore', salary: '₹6 - 9 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'Consulting', status: 'Pending', description: 'Provide strategic business analysis and consulting services.', recruiterId: 'recruiter11' },
+                { id: 24, title: 'Data Analyst', company: 'Deloitte', location: 'Chennai', salary: '₹7 - 10 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Analyze data and create reports to support business decisions.', recruiterId: 'recruiter11' },
+                { id: 25, title: 'Cybersecurity Consultant', company: 'Deloitte', location: 'Bangalore', salary: '₹12 - 18 LPA', experience: 'Senior-Level', shift: 'Both', domain: 'IT', status: 'Pending', description: 'Assess and mitigate cybersecurity risks for clients.', recruiterId: 'recruiter11' },
+                { id: 26, title: 'Tax Consultant', company: 'Deloitte', location: 'Mumbai', salary: '₹8 - 14 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'Finance', status: 'Pending', description: 'Provide tax advice and planning for corporate clients.', recruiterId: 'recruiter11' },
+                { id: 27, title: 'Risk Advisory Analyst', company: 'Deloitte', location: 'Pune', salary: '₹7 - 11 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'Consulting', status: 'Pending', description: 'Assist in identifying and managing business risks for clients.', recruiterId: 'recruiter11' },
+                { id: 28, title: 'SAP Consultant', company: 'Deloitte', location: 'Hyderabad', salary: '₹10 - 16 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Implement and optimize SAP solutions for large enterprises.', recruiterId: 'recruiter11' },
+                { id: 29, title: 'Senior Consultant', company: 'Deloitte', location: 'Delhi', salary: '₹15 - 22 LPA', experience: 'Senior-Level', shift: 'Both', domain: 'Consulting', status: 'Pending', description: 'Lead project teams and provide expert advice to clients.', recruiterId: 'recruiter11' },
+                { id: 30, title: 'Financial Analyst', company: 'Deloitte', location: 'New York', salary: '$80k - 110k', experience: 'Mid-Level', shift: 'Day', domain: 'Finance', status: 'Pending', description: 'Conduct financial modeling and valuation analyses.', recruiterId: 'recruiter11' },
+                { id: 31, title: 'Data Scientist', company: 'Deloitte', location: 'Tokyo', salary: '¥10M - 15M', experience: 'Senior-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Develop and apply machine learning algorithms to solve complex business problems.', recruiterId: 'recruiter11' },
+                { id: 32, title: 'Marketing Specialist', company: 'Deloitte', location: 'London', salary: '£45k - 60k', experience: 'Mid-Level', shift: 'Day', domain: 'Marketing', status: 'Pending', description: 'Plan and execute digital marketing strategies for clients.', recruiterId: 'recruiter11' },
+                { id: 33, title: 'Human Capital Analyst', company: 'Deloitte', location: 'Sydney', salary: 'A$90k - 110k', experience: 'Entry-Level', shift: 'Day', domain: 'Human Resources', status: 'Pending', description: 'Support clients in developing and implementing talent strategies.', recruiterId: 'recruiter11' },
+                { id: 35, title: 'Project Manager', company: 'Accenture', location: 'Bangalore', salary: '₹15 - 20 LPA', experience: 'Senior-Level', shift: 'Both', domain: 'Consulting', status: 'Pending', description: 'Lead complex IT projects and ensure timely delivery within budget.', recruiterId: 'recruiter12' },
+                { id: 36, title: 'System Analyst', company: 'Wipro', location: 'Bangalore', salary: '₹7 - 11 LPA', experience: 'Entry-Level', shift: 'Night', domain: 'IT', status: 'Pending', description: 'Analyze system requirements and design technical solutions.', recruiterId: 'recruiter13' },
+                { id: 37, title: 'SAP FICO Consultant', company: 'Infosys', location: 'Bangalore', salary: '₹10 - 15 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Implement and support SAP FICO modules for financial operations.', recruiterId: 'recruiter14' },
+                { id: 38, title: 'AI Research Scientist', company: 'DeepMind', location: 'London', salary: '£70k - 100k', experience: 'Senior-Level', shift: 'Day', domain: 'AI', status: 'Approved', description: 'Conduct cutting-edge research in artificial intelligence.', recruiterId: 'recruiter15' },
+                { id: 39, title: 'Machine Learning Engineer', company: 'AI Solutions', location: 'New York', salary: '$100k - 140k', experience: 'Mid-Level', shift: 'Day', domain: 'AI', status: 'Approved', description: 'Develop and deploy machine learning models for intelligent systems.', recruiterId: 'recruiter16' },
+                { id: 40, title: 'AI Consultant', company: 'AI Innovations', location: 'Coimbatore', salary: '₹12 - 18 LPA', experience: 'Senior-Level', shift: 'Both', domain: 'AI', status: 'Pending', description: 'Advise clients on AI strategy and implementation.', recruiterId: 'recruiter17' },
+                { id: 41, title: 'Computer Vision Engineer', company: 'VisionTech', location: 'Bangalore', salary: '₹14 - 20 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Develop computer vision algorithms for various applications.', recruiterId: 'recruiter18' },
+                // New internship jobs added here
+                { id: 42, title: 'Software Development Intern', company: 'Future Coders', location: 'Coimbatore', salary: '₹15,000 / month', experience: 'Internship', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Gain hands-on experience in full-stack development with a focus on web applications.', recruiterId: 'recruiter2' },
+                { id: 43, title: 'Marketing Intern', company: 'Digital Marketers Inc.', location: 'Chennai', salary: '₹10,000 / month', experience: 'Internship', shift: 'Day', domain: 'Marketing', status: 'Pending', description: 'Assist our marketing team with social media campaigns and content creation.', recruiterId: 'recruiter7' },
+                { id: 44, title: 'Data Analytics Intern', company: 'Data Insights Corp.', location: 'Bangalore', salary: '₹18,000 / month', experience: 'Internship', shift: 'Day', domain: 'Data Science', status: 'Pending', description: 'Work with real-world datasets and assist in building data models and reports.', recruiterId: 'recruiter1' },
+                { id: 45, title: 'HR Intern', company: 'TalentLink', location: 'Mumbai', salary: '₹12,000 / month', experience: 'Internship', shift: 'Day', domain: 'Human Resources', status: 'Pending', description: 'Support the HR team with recruitment, onboarding, and employee engagement activities.', recruiterId: 'recruiter9' },
+                { id: 46, title: 'UX Research Intern', company: 'Creative Minds', location: 'Pune', salary: '₹15,000 / month', experience: 'Internship', shift: 'Day', domain: 'Design', status: 'Pending', description: 'Help our design team conduct user research and analyze user behavior.', recruiterId: 'recruiter2' },
+                // Adding new AI jobs in different locations
+                { id: 47, title: 'AI Engineer', company: 'Accenture', location: 'Bangalore', salary: '₹12 - 18 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Develop and implement AI-driven solutions for various business sectors.', recruiterId: 'recruiter12' },
+                { id: 48, title: 'Machine Learning Engineer', company: 'Wipro', location: 'Hyderabad', salary: '₹10 - 15 LPA', experience: 'Mid-Level', shift: 'Night', domain: 'AI', status: 'Pending', description: 'Work on machine learning models and algorithms for enterprise applications.', recruiterId: 'recruiter13' },
+                { id: 49, title: 'Data Scientist - AI', company: 'Infosys', location: 'Chennai', salary: '₹14 - 20 LPA', experience: 'Senior-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Lead data science projects with a focus on AI and predictive analytics.', recruiterId: 'recruiter14' },
+                { id: 50, title: 'AI Developer', company: 'Global Tech Solutions', location: 'London', salary: '£50k - 70k', experience: 'Entry-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Build and test AI applications for our international clients.', recruiterId: 'recruiter4' },
+                { id: 51, title: 'AI/ML Specialist', company: 'Data Insights Corp.', location: 'New York', salary: '$110k - 150k', experience: 'Senior-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Provide expert consultation on AI and machine learning projects.', recruiterId: 'recruiter1' },
+                // New AI jobs for Bangalore, Chennai, Coimbatore
+                { id: 52, title: 'AI Developer', company: 'Tech Solutions Inc.', location: 'Coimbatore', salary: '₹7 - 10 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Develop and test AI applications.', recruiterId: 'recruiter1' },
+                { id: 53, title: 'ML Engineer', company: 'Data Analytics Hub', location: 'Chennai', salary: '₹9 - 14 LPA', experience: 'Mid-Level', shift: 'Both', domain: 'AI', status: 'Pending', description: 'Build and deploy machine learning models.', recruiterId: 'recruiter1' },
+                { id: 54, title: 'Computer Vision Scientist', company: 'VisionTech', location: 'Bangalore', salary: '₹15 - 22 LPA', experience: 'Senior-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Conduct research and development for computer vision applications.', recruiterId: 'recruiter18' },
+                { id: 55, title: 'Data Scientist - AI', company: 'Infosys', location: 'Bangalore', salary: '₹14 - 20 LPA', experience: 'Senior-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Lead data science projects with a focus on AI and predictive analytics.', recruiterId: 'recruiter14' },
+                { id: 56, title: 'AI/ML Intern', company: 'Future Coders', location: 'Coimbatore', salary: '₹12,000 / month', experience: 'Internship', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Gain hands-on experience in machine learning and AI model development.', recruiterId: 'recruiter2' },
+                { id: 57, title: 'AI Consultant', company: 'Deloitte', location: 'Chennai', salary: '₹12 - 18 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'AI', status: 'Pending', description: 'Advise clients on AI strategy and implementation.', recruiterId: 'recruiter11' },
+                // Newly added Software Engineer jobs
+                { id: 58, title: 'Software Engineer', company: 'Innovate Solutions', location: 'Pune', salary: '₹8 - 12 LPA', experience: 'Entry-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Develop, test, and deploy software solutions.', recruiterId: 'recruiter3' },
+                { id: 59, title: 'Software Engineer', company: 'Global Tech Solutions', location: 'London', salary: '£40k - 55k', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Build robust and scalable software systems.', recruiterId: 'recruiter4' },
+                { id: 60, title: 'Software Engineer', company: 'Creative Minds', location: 'Bangalore', salary: '₹10 - 15 LPA', experience: 'Mid-Level', shift: 'Day', domain: 'IT', status: 'Pending', description: 'Join our team to build next-generation applications.', recruiterId: 'recruiter2' },
+            ];
+
+            let users = {
+                'jobseeker1': { username: 'Alice', role: 'job_seeker', resume: 'Alice_Resume.pdf', photo: 'https://placehold.co/100x100/A0B2C4/FFFFFF?text=A', skills: [], gender: 'Female' },
+                'recruiter1': { username: 'Bob', role: 'recruiter', resume: null, photo: null, gender: 'Male' },
+                'recruiter2': { username: 'Carol', role: 'recruiter', resume: null, photo: null, gender: 'Female' },
+                'recruiter3': { username: 'David', role: 'recruiter', resume: null, photo: null, gender: 'Male' },
+                'recruiter4': { username: 'Eve', role: 'recruiter', resume: null, photo: null, gender: 'Female' },
+                'recruiter5': { username: 'Frank', role: 'recruiter', resume: null, photo: null, gender: 'Male' },
+                'recruiter6': { username: 'Grace', role: 'recruiter', resume: null, photo: null, gender: 'Female' },
+                'recruiter7': { username: 'Henry', role: 'recruiter', resume: null, photo: null, gender: 'Male' },
+                'recruiter8': { username: 'Ivy', role: 'recruiter', resume: null, photo: null, gender: 'Female' },
+                'recruiter9': { username: 'Jack', role: 'recruiter', resume: null, photo: null, gender: 'Male' },
+                'recruiter10': { username: 'Karen', role: 'recruiter', resume: null, photo: null, gender: 'Female' },
+                'recruiter11': { username: 'Deloitte Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter12': { username: 'Accenture Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter13': { username: 'Wipro Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter14': { username: 'Infosys Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter15': { username: 'DeepMind Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter16': { username: 'AI Solutions Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter17': { username: 'AI Innovations Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'recruiter18': { username: 'VisionTech Recruiter', role: 'recruiter', resume: null, photo: null, gender: 'Not specified' },
+                'admin': { username: 'Admin', role: 'admin', resume: null, photo: null, gender: 'Not specified'}
+            };
+
+            let applications = [
+                // Sample application data
+                { jobId: 2, applicantUsername: 'jobseeker1' },
+                { jobId: 3, applicantUsername: 'jobseeker1' },
+            ];
+
+            // UI Elements
+            const jobListingsContainer = document.getElementById('job-listings');
+            const loginBtn = document.getElementById('login-signup-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userInfo = document.getElementById('user-info');
+            const loginModal = document.getElementById('login-modal');
+            const applyModal = document.getElementById('apply-modal');
+            const authForm = document.getElementById('auth-form');
+            const applyForm = document.getElementById('apply-form');
+            const messageModal = document.getElementById('message-modal');
+            const messageTitle = document.getElementById('message-title');
+            const messageText = document.getElementById('message-text');
+            const jobSeekerDashboard = document.getElementById('job-seeker-dashboard');
+            const recruiterDashboard = document.getElementById('recruiter-dashboard');
+            const adminDashboard = document.getElementById('admin-dashboard');
+            const recruiterJobsList = document.getElementById('recruiter-jobs-list');
+            const postJobForm = document.getElementById('post-job-form');
+            const applicantsModal = document.getElementById('applicants-modal');
+            const applicantsTitle = document.getElementById('applicants-title');
+            const applicantsList = document.getElementById('applicants-list');
+            const jobSeekerProfile = document.getElementById('job-seeker-profile');
+            const appliedJobsSection = document.getElementById('applied-jobs-section');
+            const appliedJobsList = document.getElementById('applied-jobs-list');
+            const manageJobsList = document.getElementById('manage-jobs-list');
+            const manageUsersList = document.getElementById('manage-users-list');
+            const appliedJobsCount = document.getElementById('applied-jobs-count');
+            const postedJobsCount = document.getElementById('posted-jobs-count');
+            const totalApplicantsCount = document.getElementById('total-applicants-count');
+            const generateJdBtn = document.getElementById('generate-jd-btn');
+            const applyFiltersBtn = document.getElementById('apply-filters-btn');
+            const clearApplicationsBtn = document.getElementById('clear-applications-btn');
+            
+            // --- UI Functions ---
+            function showMessageModal(title, text) {
+                messageTitle.textContent = title;
+                messageText.textContent = text;
+                messageModal.style.display = 'flex';
+            }
+
+            function updateUIForAuth(user) {
+                if (user) {
+                    currentUser = user;
+                    loginBtn.classList.add('hidden');
+                    logoutBtn.classList.remove('hidden');
+                    userInfo.classList.remove('hidden');
+                    userInfo.textContent = `Welcome, ${user.username}!`;
+
+                    if (user.role === 'job_seeker') {
+                        jobSeekerDashboard.classList.remove('hidden');
+                        recruiterDashboard.classList.add('hidden');
+                        adminDashboard.classList.add('hidden');
+                        renderJobs(jobs);
+                        renderJobSeekerProfile();
+                        renderAppliedJobs();
+                        renderJobSeekerAnalytics();
+                    } else if (user.role === 'recruiter') {
+                        recruiterDashboard.classList.remove('hidden');
+                        jobSeekerDashboard.classList.add('hidden');
+                        adminDashboard.classList.add('hidden');
+                        renderRecruiterJobs();
+                        renderRecruiterAnalytics();
+                    } else if (user.role === 'admin') {
+                        adminDashboard.classList.remove('hidden');
+                        jobSeekerDashboard.classList.add('hidden');
+                        recruiterDashboard.classList.add('hidden');
+                        renderAdminDashboard();
+                    }
+                } else {
+                    currentUser = null;
+                    loginBtn.classList.remove('hidden');
+                    logoutBtn.classList.add('hidden');
+                    userInfo.classList.add('hidden');
+                    userInfo.textContent = '';
+                    jobSeekerDashboard.classList.remove('hidden');
+                    recruiterDashboard.classList.add('hidden');
+                    adminDashboard.classList.add('hidden');
+                    renderJobs(jobs); // Show all jobs when logged out
+                }
+            }
+
+            function renderJobSeekerAnalytics() {
+                if (!currentUser || currentUser.role !== 'job_seeker') return;
+                const userApplications = applications.filter(app => app.applicantUsername.toLowerCase().replace(/\s/g, '') === currentUser.username.toLowerCase().replace(/\s/g, ''));
+                appliedJobsCount.textContent = userApplications.length;
+            }
+
+            function renderRecruiterAnalytics() {
+                if (!currentUser || currentUser.role !== 'recruiter') return;
+                const myJobs = jobs.filter(job => job.recruiterId === currentUser.username.toLowerCase().replace(/\s/g, ''));
+                const myJobIds = myJobs.map(job => job.id);
+                const totalApplications = applications.filter(app => myJobIds.includes(app.jobId)).length;
+                
+                postedJobsCount.textContent = myJobs.length;
+                totalApplicantsCount.textContent = totalApplications;
+            }
+
+            function renderJobSeekerProfile() {
+                if (!currentUser || currentUser.role !== 'job_seeker') return;
+
+                const photoUrl = currentUser.photo || `https://placehold.co/100x100/A0B2C4/FFFFFF?text=${currentUser.username.charAt(0).toUpperCase()}`;
+                const resumeUrl = currentUser.resume || "#";
+                const resumeLinkHtml = currentUser.resume ? `<a href="${resumeUrl}" target="_blank" class="text-sm text-blue-500 hover:underline cursor-pointer">View Resume</a>` : '<p class="text-sm text-gray-500">No resume uploaded</p>';
+
+                jobSeekerProfile.innerHTML = `
+                    <h3 class="text-xl font-medium text-gray-600 mb-4">My Profile & Resume</h3>
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img src="${photoUrl}" alt="Profile Photo" class="w-16 h-16 rounded-full border-2 border-blue-400">
+                        <div>
+                            <p class="font-semibold text-gray-800">${currentUser.username}</p>
+                            <p class="text-sm text-gray-500">Gender: ${currentUser.gender}</p>
+                            ${resumeLinkHtml}
+                        </div>
+                    </div>
+                    <form id="profile-upload-form" class="space-y-3">
+                        <div>
+                            <label for="profile-photo-upload" class="block text-sm font-medium text-gray-700">Update Photo (JPG/PNG)</label>
+                            <input type="file" id="profile-photo-upload" accept=".jpg, .jpeg, .png" class="mt-1 w-full text-sm text-gray-500">
+                        </div>
+                        <div>
+                             <label for="profile-gender-select" class="block text-sm font-medium text-gray-700">Update Gender</label>
+                             <select id="profile-gender-select" class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="Not specified">Not specified</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-1">
+                                <label for="profile-resume-upload" class="block text-sm font-medium text-gray-700">Update Resume (PDF/DOCX)</label>
+                                <input type="file" id="profile-resume-upload" accept=".pdf, .docx" class="mt-1 w-full text-sm text-gray-500">
+                            </div>
+                            <button id="parse-resume-btn" type="button" class="bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-purple-600 transition duration-300 whitespace-nowrap">
+                                ✨ Parse Resume
+                            </button>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">
+                            Update Profile
+                        </button>
+                    </form>
+                    <div id="skills-section" class="mt-4">
+                        <h4 class="font-semibold text-gray-700">Your Skills:</h4>
+                        <div id="skills-list" class="flex flex-wrap gap-2 mt-2">
+                            ${currentUser.skills && currentUser.skills.length > 0 ? currentUser.skills.map(skill => `<span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm">${skill}</span>`).join('') : '<p class="text-sm text-gray-500">No skills parsed yet. Upload a resume and click "Parse Resume".</p>'}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('profile-gender-select').value = currentUser.gender || 'Not specified';
+            }
+            
+            // This listener is now outside the render function to prevent duplicates
+            document.addEventListener('submit', (e) => {
+                if (e.target.id === 'profile-upload-form') {
+                    e.preventDefault();
+                    const photoFile = document.getElementById('profile-photo-upload').files[0];
+                    const resumeFile = document.getElementById('profile-resume-upload').files[0];
+                    const gender = document.getElementById('profile-gender-select').value;
+                    
+                    if (photoFile) {
+                        currentUser.photo = URL.createObjectURL(photoFile);
+                    }
+                    if (resumeFile) {
+                        currentUser.resume = URL.createObjectURL(resumeFile);
+                    }
+                    currentUser.gender = gender;
+                    
+                    renderJobSeekerProfile();
+                    showMessageModal('Profile Updated!', 'Your profile and resume have been updated. Note: Files are only stored locally in your browser for this session.');
+                }
+            });
+
+            document.addEventListener('click', async (e) => {
+                if (e.target.id === 'parse-resume-btn') {
+                    const resumeFile = document.getElementById('profile-resume-upload').files[0];
+                    if (!resumeFile) {
+                        showMessageModal('No Resume Selected', 'Please upload a resume file first.');
+                        return;
+                    }
+
+                    const originalBtnText = e.target.textContent;
+                    e.target.textContent = 'Parsing...';
+                    e.target.disabled = true;
+
+                    const mockResumeContent = `
+                        This is a mock resume for a software developer.
+                        Skills: JavaScript, Python, Tailwind CSS, React, Node.js, HTML, CSS.
+                        Experience: 5 years in web development.
+                        Education: B.E. Computer Science.
+                    `;
+                    
+                    const systemPrompt = "You are a resume parser. Extract a list of up to 5 key skills from the provided text. Respond with a comma-separated list of skills only. Do not include any other text.";
+                    const userQuery = `Extract skills from this resume: ${mockResumeContent}`;
+                    
+                    const payload = {
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                    };
+
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        const parsedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        
+                        if (parsedText) {
+                            currentUser.skills = parsedText.split(',').map(s => s.trim());
+                            renderJobSeekerProfile();
+                            showMessageModal('Skills Parsed!', 'Your skills have been extracted from the resume.');
+                        } else {
+                            showMessageModal('Error', 'Failed to parse resume. Please try again.');
+                        }
+                    } catch (error) {
+                        showMessageModal('Error', 'An error occurred while parsing the resume.');
+                        console.error('Error parsing resume:', error);
+                    } finally {
+                        e.target.textContent = originalBtnText;
+                        e.target.disabled = false;
+                    }
+                }
+            });
+
+
+            function renderAppliedJobs() {
+                if (!currentUser || currentUser.role !== 'job_seeker') {
+                    appliedJobsSection.classList.add('hidden');
+                    return;
+                }
+                
+                appliedJobsSection.classList.remove('hidden');
+                appliedJobsList.innerHTML = '';
+                const userApplications = applications.filter(app => app.applicantUsername.toLowerCase().replace(/\s/g, '') === currentUser.username.toLowerCase().replace(/\s/g, ''));
+                
+                if (userApplications.length === 0) {
+                    appliedJobsList.innerHTML = '<p class="text-center text-gray-500">You have not applied for any jobs yet.</p>';
+                } else {
+                    userApplications.forEach(app => {
+                        const job = jobs.find(j => j.id === app.jobId);
+                        if (job) {
+                            const appliedJobCard = document.createElement('div');
+                            appliedJobCard.className = 'bg-white rounded-xl shadow-md p-6 border border-gray-200';
+                            appliedJobCard.innerHTML = `
+                                <h4 class="text-lg font-semibold text-gray-800 mb-1">${job.title}</h4>
+                                <p class="text-gray-700 font-medium mb-2">${job.company} - <span class="text-gray-500">${job.location}</span></p>
+                                <p class="text-sm text-gray-600">Applied on: N/A</p>
+                            `;
+                            appliedJobsList.appendChild(appliedJobCard);
+                        }
+                    });
+                }
+            }
+
+            function renderJobs(filteredJobs) {
+                jobListingsContainer.innerHTML = '';
+                const approvedJobs = filteredJobs.filter(job => job.status === 'Approved');
+                if (approvedJobs.length === 0) {
+                    jobListingsContainer.innerHTML = '<p class="text-center text-gray-500">No jobs found matching your criteria.</p>';
+                } else {
+                    approvedJobs.forEach(job => {
+                        const jobCard = document.createElement('div');
+                        jobCard.className = 'bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition duration-300';
+                        jobCard.innerHTML = `
+                            <h3 class="text-xl font-semibold text-blue-600 mb-1">${job.title}</h3>
+                            <p class="text-gray-700 font-medium mb-2">${job.company} - <span class="text-gray-500">${job.location}</span></p>
+                            <p class="text-sm text-gray-600 mb-3">${job.experience} | Salary: ${job.salary} | Shift: ${job.shift} | Domain: ${job.domain}</p>
+                            <p class="text-gray-800 text-base mb-4">${job.description}</p>
+                            <button data-job-id="${job.id}" class="apply-btn bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 w-full">Apply Now</button>
+                        `;
+                        jobListingsContainer.appendChild(jobCard);
+                    });
+                }
+            }
+
+            function renderRecruiterJobs() {
+                recruiterJobsList.innerHTML = '';
+                if (!currentUser || currentUser.role !== 'recruiter') return;
+
+                const myJobs = jobs.filter(job => job.recruiterId === currentUser.username.toLowerCase().replace(/\s/g, ''));
+                if (myJobs.length === 0) {
+                    recruiterJobsList.innerHTML = '<p class="text-center text-gray-500">You have not posted any jobs yet.</p>';
+                    return;
+                }
+
+                myJobs.forEach(job => {
+                    const applicantCount = applications.filter(app => app.jobId === job.id).length;
+                    const jobCard = document.createElement('div');
+                    jobCard.className = 'bg-white rounded-xl shadow-md p-6 border border-gray-200';
+                    jobCard.innerHTML = `
+                        <h4 class="text-lg font-semibold text-gray-800 mb-1">${job.title}</h4>
+                        <p class="text-sm text-gray-600 mb-2">Location: ${job.location} | Shift: ${job.shift} | Domain: ${job.domain} | Status: <span class="font-semibold ${job.status === 'Approved' ? 'text-green-500' : 'text-yellow-500'}">${job.status}</span></p>
+                        <p class="text-sm text-gray-600">Applicants: <span class="font-bold text-blue-600">${applicantCount}</span></p>
+                        <button data-job-id="${job.id}" class="view-applicants-btn bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg mt-3 hover:bg-purple-600 transition duration-300">
+                            View Applicants
+                        </button>
+                    `;
+                    recruiterJobsList.appendChild(jobCard);
+                });
+            }
+
+            function renderAdminDashboard() {
+                // Get the total number of users and jobs directly from the arrays
+                const totalUsersCount = Object.keys(users).length;
+                const totalJobsCount = jobs.length;
+                
+                // Update the UI elements with the correct counts
+                document.getElementById('total-users-count').textContent = totalUsersCount;
+                document.getElementById('total-jobs-count').textContent = totalJobsCount;
+
+                renderManageJobs();
+                renderManageUsers();
+            }
+
+            function renderManageJobs() {
+                manageJobsList.innerHTML = '';
+                jobs.forEach(job => {
+                    const jobItem = document.createElement('div');
+                    jobItem.className = `bg-white rounded-lg p-4 border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0`;
+                    
+                    const applicantCount = applications.filter(app => app.jobId === job.id).length;
+                    
+                    jobItem.innerHTML = `
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-800">${job.title}</h4>
+                            <p class="text-sm text-gray-600">${job.company} - ${job.location}</p>
+                            <p class="text-sm text-gray-500">Status: <span class="font-semibold ${job.status === 'Approved' ? 'text-green-500' : 'text-yellow-500'}">${job.status}</span></p>
+                            <p class="text-sm text-gray-600">Applicants: <span class="font-bold text-blue-600">${applicantCount}</span></p>
+                        </div>
+                        <div class="flex space-x-2 mt-2 md:mt-0">
+                            <button data-job-id="${job.id}" class="approve-job-btn bg-green-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-green-600 transition duration-300 text-sm">Approve</button>
+                            <button data-job-id="${job.id}" class="reject-job-btn bg-red-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-red-600 transition duration-300 text-sm">Reject</button>
+                            <button data-job-id="${job.id}" class="view-applicants-admin-btn bg-purple-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-purple-600 transition duration-300 text-sm">View Applicants</button>
+                        </div>
+                    `;
+                    manageJobsList.appendChild(jobItem);
+                });
+            }
+            
+            function renderManageUsers() {
+                manageUsersList.innerHTML = '';
+                Object.values(users).forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'bg-white rounded-lg p-4 border border-gray-200 flex justify-between items-center';
+                    userItem.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-700">${user.username}</p>
+                            <p class="text-sm text-gray-500">Role: ${user.role}</p>
+                            <p class="text-sm text-gray-500">Gender: ${user.gender}</p>
+                        </div>
+                    `;
+                    manageUsersList.appendChild(userItem);
+                });
+            }
+
+
+            // --- Event Listeners ---
+            loginBtn.addEventListener('click', () => {
+                loginModal.style.display = 'flex';
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                updateUIForAuth(null);
+                showMessageModal('Logged Out', 'You have been successfully logged out.');
+            });
+
+            authForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+                const role = document.getElementById('role-select').value;
+                const gender = document.getElementById('gender-select').value;
+                const authMessage = document.getElementById('auth-message');
+
+                if (username && password) {
+                    const userId = username.toLowerCase().replace(/\s/g, '');
+                    if (users[userId]) {
+                         if (users[userId].role === role) {
+                            updateUIForAuth(users[userId]);
+                            loginModal.style.display = 'none';
+                            showMessageModal('Success!', `Welcome back, ${users[userId].username}!`);
+                        } else {
+                            authMessage.textContent = 'User exists, but with a different role. Please select the correct role.';
+                        }
+                    } else {
+                        users[userId] = { username, role, gender, resume: null, photo: null, skills: [] };
+                        updateUIForAuth(users[userId]);
+                        loginModal.style.display = 'none';
+                        showMessageModal('Success!', `Welcome, ${username}! Your account has been created.`);
+                    }
+                } else {
+                    authMessage.textContent = 'Please enter a valid username and password.';
+                }
+            });
+
+            jobListingsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('apply-btn')) {
+                    if (currentUser && currentUser.role === 'job_seeker') {
+                        const jobId = parseInt(e.target.dataset.jobId);
+                        const job = jobs.find(j => j.id === jobId);
+                        
+                        if (!currentUser.resume) {
+                            showMessageModal('Resume Required', 'Please upload your resume in the "My Profile & Resume" section before applying for jobs.');
+                            return;
+                        }
+                        
+                        document.getElementById('job-title-apply').textContent = `Applying for: ${job.title}`;
+                        applyModal.style.display = 'flex';
+                        applyForm.dataset.jobId = jobId;
+                    } else if (currentUser && currentUser.role === 'recruiter') {
+                        showMessageModal('Access Denied', 'Recruiters cannot apply for jobs.');
+                    } else {
+                        showMessageModal('Authentication Required', 'Please log in as a Job Seeker to apply for jobs.');
+                    }
+                }
+            });
+
+            applyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const jobId = parseInt(applyForm.dataset.jobId);
+                const job = jobs.find(j => j.id === jobId);
+
+                // This logic is now simplified as resume and photo are managed in the profile section
+                applications.push({
+                    jobId,
+                    applicantUsername: currentUser.username.toLowerCase().replace(/\s/g, '')
+                });
+
+                applyModal.style.display = 'none';
+                showMessageModal('Application Submitted!', `Your application for "${job.title}" has been submitted.`);
+                renderAppliedJobs();
+                renderJobSeekerAnalytics();
+                renderAdminDashboard(); // Re-render admin dashboard to update applicant count
+            });
+
+            postJobForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('job-title-input').value;
+                const location = document.getElementById('job-location-input').value;
+                const description = document.getElementById('job-description-input').value;
+                const shift = document.getElementById('job-shift-input').value;
+                const domain = document.getElementById('job-domain-input').value;
+                
+                const newJobId = jobs.length > 0 ? Math.max(...jobs.map(j => j.id)) + 1 : 1;
+                const newJob = {
+                    id: newJobId,
+                    title,
+                    location,
+                    description,
+                    shift,
+                    domain,
+                    company: currentUser.username,
+                    salary: 'Negotiable',
+                    experience: 'Not Specified',
+                    recruiterId: currentUser.username.toLowerCase().replace(/\s/g, ''),
+                    status: 'Pending'
+                };
+                jobs.push(newJob);
+                
+                postJobForm.reset();
+                renderRecruiterJobs();
+                renderRecruiterAnalytics();
+                showMessageModal('Success!', `The job "${title}" has been posted and is awaiting admin approval.`);
+            });
+
+            recruiterJobsList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('view-applicants-btn')) {
+                    const jobId = parseInt(e.target.dataset.jobId);
+                    const job = jobs.find(j => j.id === jobId);
+                    const jobApplicants = applications.filter(app => app.jobId === jobId);
+
+                    applicantsTitle.textContent = `Applicants for "${job.title}"`;
+                    applicantsList.innerHTML = '';
+                    if (jobApplicants.length === 0) {
+                        applicantsList.innerHTML = '<p class="text-center text-gray-500">No applicants yet.</p>';
+                    } else {
+                        jobApplicants.forEach(app => {
+                            const applicantUser = users[app.applicantUsername.toLowerCase().replace(/\s/g, '')];
+                            if (!applicantUser) {
+                                console.error('Applicant user not found:', app.applicantUsername);
+                                return;
+                            }
+                            const photoHtml = applicantUser.photo ? `<img src="${applicantUser.photo}" alt="Applicant Photo" class="w-12 h-12 rounded-full border-2 border-gray-300">` : `<div class="w-12 h-12 rounded-full border-2 border-gray-300 bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">${applicantUser.username.charAt(0).toUpperCase()}</div>`;
+                            const applicantItem = document.createElement('div');
+                            applicantItem.className = 'bg-white rounded-lg p-4 border border-gray-200 flex items-center space-x-4';
+                            
+                            applicantItem.innerHTML = `
+                                ${photoHtml}
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-700">${applicantUser.username}</p>
+                                    <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" class="text-sm text-blue-500 hover:underline cursor-pointer">${applicantUser.resume ? applicantUser.resume : 'Resume not found'}</a>
+                                </div>
+                            `;
+                            applicantsList.appendChild(applicantItem);
+                        });
+                    }
+                    applicantsModal.style.display = 'flex';
+                }
+            });
+
+            manageJobsList.addEventListener('click', (e) => {
+                const jobId = parseInt(e.target.dataset.jobId);
+                const job = jobs.find(j => j.id === jobId);
+                if (!job) return;
+
+                if (e.target.classList.contains('approve-job-btn')) {
+                    job.status = 'Approved';
+                    renderAdminDashboard();
+                    renderJobs(jobs);
+                    showMessageModal('Job Approved', `The job "${job.title}" has been approved.`);
+                } else if (e.target.classList.contains('reject-job-btn')) {
+                    job.status = 'Rejected';
+                    renderAdminDashboard();
+                    showMessageModal('Job Rejected', `The job "${job.title}" has been rejected.`);
+                } else if (e.target.classList.contains('view-applicants-admin-btn')) {
+                    const jobApplicants = applications.filter(app => app.jobId === jobId);
+
+                    applicantsTitle.textContent = `Applicants for "${job.title}"`;
+                    applicantsList.innerHTML = '';
+                    if (jobApplicants.length === 0) {
+                        applicantsList.innerHTML = '<p class="text-center text-gray-500">No applicants yet.</p>';
+                    } else {
+                        jobApplicants.forEach(app => {
+                            const applicantUser = users[app.applicantUsername.toLowerCase().replace(/\s/g, '')];
+                            if (!applicantUser) {
+                                console.error('Applicant user not found:', app.applicantUsername);
+                                return;
+                            }
+                            const photoHtml = applicantUser.photo ? `<img src="${applicantUser.photo}" alt="Applicant Photo" class="w-12 h-12 rounded-full border-2 border-gray-300">` : `<div class="w-12 h-12 rounded-full border-2 border-gray-300 bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">${applicantUser.username.charAt(0).toUpperCase()}</div>`;
+                            const applicantItem = document.createElement('div');
+                            applicantItem.className = 'bg-white rounded-lg p-4 border border-gray-200 flex items-center space-x-4';
+                            
+                            applicantItem.innerHTML = `
+                                ${photoHtml}
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-700">${applicantUser.username}</p>
+                                    <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" class="text-sm text-blue-500 hover:underline cursor-pointer">${applicantUser.resume ? applicantUser.resume : 'Resume not found'}</a>
+                                </div>
+                            `;
+                            applicantsList.appendChild(applicantItem);
+                        });
+                    }
+                    applicantsModal.style.display = 'flex';
+                }
+            });
+
+            document.getElementById('apply-filters-btn').addEventListener('click', () => {
+                const keyword = document.getElementById('search-keyword').value.toLowerCase();
+                const location = document.getElementById('filter-location').value;
+                const experience = document.getElementById('filter-experience').value;
+                const shift = document.getElementById('filter-shift').value;
+                const domain = document.getElementById('filter-domain').value;
+
+                const filteredJobs = jobs.filter(job => {
+                    const matchesKeyword = !keyword || job.title.toLowerCase().includes(keyword) || job.description.toLowerCase().includes(keyword);
+                    const matchesLocation = !location || job.location === location;
+                    const matchesExperience = !experience || job.experience === experience;
+                    const matchesShift = !shift || job.shift === shift;
+                    const matchesDomain = !domain || job.domain === domain;
+                    return matchesKeyword && matchesLocation && matchesExperience && matchesShift && matchesDomain;
+                });
+
+                renderJobs(filteredJobs);
+            });
+
+            generateJdBtn.addEventListener('click', async (event) => {
+                const title = document.getElementById('job-title-input').value.trim();
+                const location = document.getElementById('job-location-input').value.trim();
+                const domain = document.getElementById('job-domain-input').value;
+                
+                if (!title || !location || !domain) {
+                    showMessageModal('Missing Information', 'Please fill in the Job Title, Location, and Domain to generate a description.');
+                    return;
+                }
+
+                const originalBtnText = event.target.innerHTML;
+                event.target.innerHTML = '<span class="loading-spinner"></span>';
+                event.target.disabled = true;
+
+                const systemPrompt = "You are a professional job description writer. Create a detailed and compelling job description based on the provided job title, location, and domain. The job description should include an overview, key responsibilities, qualifications, and a call to action. Do not include a company name in your response.";
+                const userQuery = `Write a job description for a ${title} position in ${location} within the ${domain} domain.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+                
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (generatedText) {
+                        document.getElementById('job-description-input').value = generatedText;
+                        showMessageModal('JD Generated!', 'The job description has been generated successfully.');
+                    } else {
+                        showMessageModal('Generation Failed', 'Could not generate a job description. Please try again.');
+                    }
+                } catch (error) {
+                    showMessageModal('Error', 'An error occurred while generating the job description.');
+                    console.error('Error generating JD:', error);
+                } finally {
+                    event.target.innerHTML = originalBtnText;
+                    event.target.disabled = false;
+                }
+            });
+
+            clearApplicationsBtn.addEventListener('click', () => {
+                applications = []; // Clears the applications array
+                renderAdminDashboard(); // Re-render to show the updated count
+                showMessageModal('Applications Cleared', 'The list of all job applications has been cleared.');
+            });
+
+            updateUIForAuth(null);
+        });
+        
+    </script>
+
+</body>
+</html>
